@@ -1,0 +1,108 @@
+- hosts: aws_ec2
+  tasks:
+  - name: Update existent packages to latest version
+    become: true
+    apt:
+      update_cache: yes
+      state: latest
+      name: "*"
+      upgrade: full
+
+  - name: Install Docker and Kubernetes dependencies
+    become: true
+    apt:
+      update_cache: yes
+      state: latest
+      name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gpg-agent
+      - software-properties-common
+
+  - name: Add an apt signing key (GPG) for Docker
+    become: true
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: Add Docker apt repo
+    become: true
+    apt_repository:
+      repo: deb https://download.docker.com/linux/ubuntu bionic stable
+      state: present
+
+  - name: Install Docker and Containerd
+    become: true
+    apt:
+      update_cache: yes
+      state: latest
+      name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+
+  # - name: Adjusting Docker daemon to Kubernetes
+  #   copy:
+  #     src: "docker/daemon.json"
+  #     dest: "/etc/docker/daemon.json"
+  #   become: yes
+
+  - name: Configuring Docker daemon.json file
+    become: true
+    copy:
+      dest: /etc/docker/daemon.json
+      content: |
+        {
+        "exec-opts": ["native.cgroupdriver=systemd"]
+        }
+
+  - name: Restart Docker
+    become: yes
+    ansible.builtin.systemd:
+      state: restarted
+      daemon_reload: yes
+      name: docker
+
+  - name: Remove swapfile from /etc/fstab
+    mount:
+      name: "{{ item }}"
+      fstype: swap
+      state: absent
+    with_items:
+      - swap
+      - none
+
+  - name: Disable swap
+    command: swapoff -a
+    when: ansible_swaptotal_mb > 0
+
+  - name: Add an apt signing key (GPG) for Kubernetes
+    become: true
+    apt_key:
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      state: present
+
+  - name: Adding apt repository for Kubernetes
+    become: true
+    apt_repository:
+      repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+      state: present
+      filename: kubernetes.list
+
+  - name: Install Kubernetes
+    become: true
+    apt:
+      update_cache: yes
+      state: latest
+      name:
+        - kubelet 
+        - kubeadm 
+        - kubectl
+
+  - name: Restart kubelet
+    become: true
+    ansible.builtin.systemd:
+      state: restarted
+      daemon_reload: yes
+      name: kubelet
