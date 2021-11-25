@@ -6,7 +6,7 @@
       update_cache: yes
       state: latest
       name: "*"
-      upgrade: full
+      # upgrade: full
 
   - name: Install Docker and Kubernetes dependencies
     become: true
@@ -106,3 +106,51 @@
       state: restarted
       daemon_reload: yes
       name: kubelet
+
+  - name: Add vm swappiness
+    become: true
+    lineinfile:
+      path: /etc/sysctl.d/k8s.conf
+      line: 'vm.swappiness = 0'
+      state: present
+      create: yes
+
+  - name: Add vm overcommit_memory
+    become: true
+    lineinfile:
+      path: /etc/sysctl.d/k8s.conf
+      line: 'vm.overcommit_memory = 1'
+      state: present
+      create: yes
+
+  - name: Add netbridge config ip4
+    become: true
+    lineinfile:
+      path: /etc/sysctl.d/k8s.conf
+      line: 'net.bridge.bridge-nf-call-iptables = 1'
+      state: present
+      create: yes
+
+  - name: Increase net ipv4 tcp_max_syn_backlog
+    become: true
+    lineinfile:
+      path: /etc/sysctl.d/k8s.conf
+      line: 'net.ipv4.tcp_max_syn_backlog=2621440'
+      state: present
+      create: yes
+
+  - name: update sysctl
+    become: true
+    command: sysctl --system
+
+  - name: Start kubelet
+    become: true
+    systemd:
+      state: started
+      daemon_reload: yes
+      name: kubelet
+      enabled: yes
+
+  - name: Reset kubeadm
+    become: true
+    shell: kubeadm reset --force

@@ -1,0 +1,41 @@
+- hosts: masters_primary
+  become: true
+  tasks:
+    - name: Generate master join token
+      shell: kubeadm token create --print-join-command
+      register: kubeadm_join_cmd
+
+    - name: Generate certificate token
+      shell: kubeadm init phase upload-certs --upload-certs
+      register: kubeadm_cert_cmd
+
+    # - name: Store temporarily join token and certificate token
+    #   set_fact:
+    #     kubeadm_join: "{{ kubeadm_join_cmd.stdout }}"
+    #     kubeadm_cert: "{{ (kubeadm_cert_cmd.stdout_lines | list)[2] }}"
+    # - debug:
+    #     msg: "{{ kubeadm_cert }}"
+    # - debug:
+    #     msg: "{{ kubeadm_join }}"
+
+- hosts: masters_replica
+  become: true
+  tasks:
+    - set_fact:
+        kubeadm_join: "{{ hostvars[groups['masters_primary'][0]]['kubeadm_join_cmd']['stdout'] }}"
+        kubeadm_cert: "{{ (hostvars[groups['masters_primary'][0]]['kubeadm_cert_cmd']['stdout_lines'] | list)[2] }}"
+
+    - debug:
+        msg: "{{ kubeadm_join }} --control-plane --certificate-key {{ kubeadm_cert }} --apiserver-advertise-address {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+
+    - name: Join Master replicas to cluster
+      shell: "{{ kubeadm_join }} --control-plane --certificate-key {{ kubeadm_cert }} --apiserver-advertise-address {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      register: kubeadm_join_replicas_cmd_output
+
+    - name: "Wait for replicas initialization."
+      wait_for:
+        timeout: 10
+
+    - name: Master replicas joining output
+      debug:
+        var: kubeadm_join_replicas.stdout

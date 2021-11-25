@@ -6,7 +6,6 @@ resource "aws_lb" "nlb_proxy" {
   internal = var.nlb_lb_proxy_object.is_internal
   load_balancer_type = "network"
   ip_address_type = "ipv4"
-  enable_deletion_protection = true
   subnets = local.public_subnet_ids_list
 
   tags = {

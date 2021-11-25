@@ -68,6 +68,7 @@ resource "aws_instance" "k8s_master_etcd" {
     "Name" = "${var.instance_k8s_master_etcd_object.tags.name}-${count.index}"
     "instance-group" = "${var.instance_k8s_master_etcd_object.tags.instance_group}"
     "instance-sub-group" = "${var.instance_k8s_master_etcd_object.tags.instance_sub_group}"
+    "etcd-group" = "${count.index == 0 ? var.instance_k8s_master_etcd_object.tags.etcd_group[0] : var.instance_k8s_master_etcd_object.tags.etcd_group[1] }"
     "ctr-orchestration-engine" = "${var.container_orchestration.engine}"
     "ctr-orchestration-cluster" = "${var.container_orchestration.cluster_name}"
     "ctr-orchestration-network" = "${var.container_orchestration.network_template}"

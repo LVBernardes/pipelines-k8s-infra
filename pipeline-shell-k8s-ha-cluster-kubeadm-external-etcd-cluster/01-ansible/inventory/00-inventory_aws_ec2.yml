@@ -29,6 +29,8 @@ keyed_groups:
     separator: ''
   - key: tags['instance-sub-group']
     separator: ''
+  - key: tags['etcd-group']
+    separator: ''
 
 hostnames:
   # a list in order of precedence for hostname variables.

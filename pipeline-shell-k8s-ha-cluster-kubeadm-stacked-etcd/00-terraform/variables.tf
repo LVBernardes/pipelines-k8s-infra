@@ -8,8 +8,8 @@ variable "project" {
 variable "container_orchestration" {
   description = "Container orchestration engine details."
   type = object({
-    engine = string
-    cluster_name = string
+    engine           = string
+    cluster_name     = string
     network_template = string
   })
 }
@@ -24,9 +24,9 @@ variable "container_engine" {
 variable "vpc_data" {
   description = "VPC details."
   type = object({
-    vpc_id = string
+    vpc_id              = string
     route_table_private = string
-    route_table_public = string
+    route_table_public  = string
   })
 }
 
@@ -113,23 +113,6 @@ variable "instance_k8s_master_object" {
       name               = string
       instance_group     = string
       instance_sub_group = list(string)
-    })
-  })
-}
-
-variable "instance_k8s_master_etcd_object" {
-  description = "Instance template data for Master ETCD storage in Kubernetes environment."
-  type = object({
-    type            = string
-    key_pair        = string
-    iam_profile     = string
-    number_of_nodes = number
-    public_ip       = bool
-    root_ebs_size   = number
-    tags = object({
-      name               = string
-      instance_group     = string
-      instance_sub_group = string
     })
   })
 }
