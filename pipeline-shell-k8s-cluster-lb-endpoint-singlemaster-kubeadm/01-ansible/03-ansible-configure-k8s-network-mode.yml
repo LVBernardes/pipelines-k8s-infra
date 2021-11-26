@@ -1,0 +1,17 @@
+- name: PHASE 04 - Configure network operation mode (CNI plugin)
+  hosts: masters_primary
+  become: true
+  tasks:
+    - name: Apply the CNI plugin (network template) to cluster
+      shell: kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+
+    - name: Wait CNI plugin script execution
+      wait_for:
+        timeout: 10
+
+    - name: Check cluster deployment
+      shell: kubectl get nodes -o wide
+      register: ps
+    
+    - debug:
+        msg: " '{{ ps.stdout_lines }}' "

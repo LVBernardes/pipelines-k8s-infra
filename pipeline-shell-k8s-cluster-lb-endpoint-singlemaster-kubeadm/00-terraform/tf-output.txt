@@ -1,0 +1,19 @@
+k8s_masters = [
+  "Name: levb-k8s-master-node-0 | PrivateIP: 10.0.210.100 | PublicIP:  ==> ssh -i '~/.ssh/keyPvtAccess.pub' ubuntu@10.0.210.100",
+]
+k8s_workers = [
+  "Name: levb-k8s-worker-node-0 | PrivateIP: 10.0.210.95 | PublicIP:  ==> ssh -i '~/.ssh/keyPvtAccess.pub' ubuntu@10.0.210.95",
+  "Name: levb-k8s-worker-node-1 | PrivateIP: 10.0.211.242 | PublicIP:  ==> ssh -i '~/.ssh/keyPvtAccess.pub' ubuntu@10.0.211.242",
+  "Name: levb-k8s-worker-node-2 | PrivateIP: 10.0.212.169 | PublicIP:  ==> ssh -i '~/.ssh/keyPvtAccess.pub' ubuntu@10.0.212.169",
+]
+lb_proxy_dns = "nlb-k8s-proxy-5af217f47568eeab.elb.us-east-1.amazonaws.com"
+private_subnets_ids = [
+  "subnet-0cd1da9ed4175c8cd",
+  "subnet-098ff54ee3189f143",
+  "subnet-0ad687d5bc4bff439",
+]
+public_subnets_ids = [
+  "subnet-094e29300a6cdef9a",
+  "subnet-05b3fbda911b767f4",
+  "subnet-07021846a0f5ef92b",
+]

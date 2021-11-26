@@ -1,0 +1,48 @@
+# aws ec2 ansible dynamic inventory plugin
+plugin: aws_ec2
+
+# set the regions.
+regions:
+  - us-east-1
+
+filters:
+  tag:instance-group:
+  - control-plane
+  - workers
+
+# set strict to False
+# if True this will make invalid entries
+# a fatal error
+strict: False
+
+keyed_groups:
+  #  each aws ec2 instance has it own instance tags. create
+  #  a tag variable from those tags for ansible to use.
+  #  if the ec2 tag Name had the value cygnusx1 the tag
+  #  variable would be:
+  #  tag_Name_cygnusx1
+  #  if a tag existed for an aws instance as
+  #  Applications with the value of Oracle the
+  #  variable would be:
+  #  tag_Applications_Oracle
+  - key: tags['instance-group']
+    separator: ''
+  - key: tags['instance-sub-group']
+    separator: ''
+
+hostnames:
+  # a list in order of precedence for hostname variables.
+  # - ip-address
+  # - dns-name
+  - tag:Name
+  - private-ip-address
+
+compose:
+# use if you need to connect via the ec2
+# private ip address.
+#
+# this is needed for example in a
+# corporate / company environment where ec2
+# instances don't use a public ip address
+#
+  ansible_host: private_ip_address

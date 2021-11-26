@@ -1,0 +1,13 @@
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+kubernetesVersion: stable
+controlPlaneEndpoint: "{{ load_balancer_dns }}:{{ load_balancer_port }}"
+etcd:
+    external:
+        endpoints:
+{% for host in groups['masters_etcd'] %}
+        - https://{{ hostvars[host]['ansible_host'] }}:2379
+{% endfor %}
+        caFile: /etc/kubernetes/pki/etcd/ca.crt
+        certFile: /etc/kubernetes/pki/apiserver-etcd-client.crt
+        keyFile: /etc/kubernetes/pki/apiserver-etcd-client.key

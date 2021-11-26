@@ -1,0 +1,9 @@
+- name: Generate kubeadm control plane cluster config
+  hosts: 127.0.0.1
+  vars:
+    load_balancer_dns: "{{ lookup('file', 'k8s_lb_dns_name') }}"
+    load_balancer_port: "6443"
+  tasks:
+  - template:
+      src: "kubeadm-etcd-config.j2"
+      dest: "{{ playbook_dir }}/kubeadm-etcd-config.yml" 

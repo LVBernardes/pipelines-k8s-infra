@@ -1,0 +1,66 @@
+- name: Certificate authority generation for all etcd nodes
+  hosts: etcd_primary
+  become: true
+  tasks:
+    - name: Generate the certificate authority
+      shell: kubeadm init phase certs etcd-ca
+      register: kubeadm_ca_cmd_output
+
+    - debug:
+        var: kubeadm_ca_cmd_output.stdout
+
+    - name: Retrieve temporatily CA certificate files
+      fetch:
+        src: "/etc/kubernetes/pki/etcd/{{item}}"
+        dest: "{{playbook_dir}}/tmp/"
+        flat: yes
+      with_items:
+        - ca.crt
+        - ca.key
+
+- name: Configuring ETCD nodes
+  hosts: masters_etcd
+  become: true
+  tasks:
+    - name: Create kubeadm etcs cluster config yml in all nodes (/home/"{{ ansible_ssh_user }}" folder)
+      template:
+        src: "kubeadm-etcd-config.j2"
+        dest: "~{{ ansible_ssh_user }}/kubeadmcfg.yml"
+        owner: "{{ ansible_ssh_user }}"
+        mode: 0644
+
+    - name: Create kubeadm etcs cluster config yml in all nodes (/home/root folder)
+      template:
+        src: "kubeadm-etcd-config.j2"
+        dest: "/root/kubeadmcfg.yml"
+        owner: "root"
+        mode: 0644
+
+    - name: Push CA files to nodes
+      copy:
+        src: "{{ playbook_dir }}/tmp/{{ item }}"
+        dest: "/etc/kubernetes/pki/etcd/"
+        owner: "root"
+        mode: 0644
+      with_items:
+        - ca.crt
+        - ca.key
+
+    - name: Create all certificates files in all etcd nodes
+      shell: "kubeadm init phase certs {{ item }} --config=/root/kubeadmcfg.yml"
+      loop:
+        - etcd-server
+        - etcd-peer
+        - etcd-healthcheck-client
+        - apiserver-etcd-client
+      register: kubeadm_certs_creation_cmd_output
+
+    - debug:
+        var: kubeadm_certs_creation_cmd_output.stdout
+
+    - name: Create the static pod manifests on all etcd nodes
+      shell: "kubeadm init phase etcd local --config=/root/kubeadmcfg.yml"
+      register: kubeadm_pod_manifests_cmd_output
+
+    - debug:
+        var: kubeadm_pod_manifests_cmd_output.stdout
